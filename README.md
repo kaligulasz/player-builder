@@ -10,7 +10,7 @@ Include the script in the site:
 Create new EplayerApi, after the script is loaded you can create new instance of EplayerApi like in example below:
 
 ```JS
-var api = new EplayerApi();
+var api = new PlayerApi();
 
 api.fetch('example.com', 'b6ycepzoau101l6kpgta7cf7u', 'a1a0bc7edad0d27b328d0b24f4');
 ```

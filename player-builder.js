@@ -7,7 +7,16 @@
 
     // default options
     var defaults = {
-      container: false
+      container: false,
+      boxClass: 'video-box',
+      boxJsClass: 'js-video-box',
+      titleClass: 'video-box__title',
+      thumbnailClass: 'video-box__thumbnail',
+      playerContainerClass: 'video-container',
+      playerContainer: 'js-player-container',
+      playerUrl: null,
+      publisherId: null,
+      playerUuid: null
     }
 
     // Create options by extending defaults with the passed in arugments
@@ -34,9 +43,10 @@
     var parsedData = JSON.parse(data);
 
     this.fetchedData = parsedData.config.dataSource.sourceItems[0].videos;
+    this.playerUuid = this.options.playerUuid || parsedData.config.uuid;
 
     if (this.options.container) {
-      buildGrid.call(this);
+      buildDomStructure.call(this);
     }
   }
 
@@ -45,10 +55,12 @@
     window.dispatchEvent(event);
   }
 
-  function buildGrid() {
+  function buildDomStructure() {
     var container;
     var domFragment;
     var data = this.fetchedData;
+    var playerContainer = document.createElement('div');
+    var playerScript = document.createElement('script');
 
     if (typeof this.options.container === 'string') {
       container = document.querySelector(this.options.container);
@@ -59,12 +71,30 @@
     // Create a DocumentFragment to build with
     domFragment = document.createDocumentFragment();
 
-    // Create dom elements
+    // Create main player container
+    playerScript.setAttribute('src', this.options.playerUrl + '#' + this.playerUuid + '.' + this.options.publisherId);
+    playerContainer.id = this.options.playerContainer;
+    playerContainer.classList.add(this.options.playerContainerClass);
+    domFragment.appendChild(playerContainer);
+
+    // Create DOM elements
     for (var i = 0; i < data.length; i++) {
-      var content = document.createElement('div')
+      var content = document.createElement('div');
       var title = document.createElement('h4');
+      var thumbnail = document.createElement('img');
+
+      // Add class for created DOM elements
+      content.classList.add(this.options.boxClass);
+      content.classList.add(this.options.boxJsClass);
+      title.classList.add(this.options.titleClass);
+      thumbnail.classList.add(this.options.thumbnailClass);
+
+      // Add attributes for created DOM elements
+      content.setAttribute('data-uuid', data[i].uuid);
+
 
       title.innerText = data[i].title;
+      playerContainer.appendChild(playerScript);
       content.appendChild(title);
       domFragment.appendChild(content);
     }
@@ -72,6 +102,23 @@
     // Append DocumentFragment to container
     container.appendChild(domFragment);
 
+    InitializeEvents.call(this);
+  }
+
+  function InitializeEvents() {
+    var boxes = document.getElementsByClassName(this.options.boxJsClass);
+    var playerContainer = document.getElementById(this.options.playerContainer);
+    var options = this.options;
+
+    for (var i = 0; i < boxes.length; i++) {
+      boxes[i].addEventListener('click', function() {
+        var playerScript = document.createElement('script');
+
+        playerScript.setAttribute('src', options.playerUrl + '#' + this.getAttribute('data-uuid') + '.' + options.publisherId);
+        playerContainer.innerHTML = '';
+        playerContainer.appendChild(playerScript);
+      });
+    }
   }
 
   // Public methods
